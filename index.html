@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSCA 数学模拟考试</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 2.4rem;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+        }
+        .timer {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .exam-area {
+            background: rgba(255,255,255,0.97);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            margin-bottom: 20px;
+        }
+        .question-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 5px solid #1976d2;
+            border-radius: 5px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option {
+            padding: 14px 20px;
+            background: #e3f2fd;
+            border: 2px solid #bbdefb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.15rem;
+        }
+        .option:hover {
+            background: #bbdefb;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            background: #2196f3;
+            color: white;
+            border-color: #1976d2;
+            box-shadow: 0 4px 8px rgba(33,150,243,0.3);
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        button {
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-prev {
+            background: #64b5f6;
+            color: white;
+        }
+        .btn-prev:disabled {
+            background: #bdbdbd;
+            cursor: not-allowed;
+        }
+        .btn-next {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-submit {
+            background: #d32f2f;
+            color: white;
+        }
+        .btn-restart {
+            background: #9c27b0;
+            color: white;
+        }
+        .review-area {
+            display: none;
+            background: rgba(255,255,255,0.97);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .review-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #1a2a6c;
+            margin-bottom: 20px;
+        }
+        .result-summary {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+        }
+        .review-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .review-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 4px solid #2196f3;
+        }
+        .review-item.correct {
+            border-left-color: #4caf50;
+            background: #e8f5e8;
+        }
+        .review-item.incorrect {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .review-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a2a6c;
+        }
+        .review-answer {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        .discussion {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .discussion-title {
+            font-weight: bold;
+            color: #d32f2f;
+            margin-bottom: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CSCA 数学模拟考试</h1>
+            <div class="timer" id="timer">剩余时间: 60:00</div>
+        </header>
+
+        <!-- Exam Interface -->
+        <div class="exam-area" id="examArea">
+            <div class="question-number" id="questionNumber">问题 1 / 48</div>
+            <div class="question-text" id="questionText">若 A={1,2,3}，B={3,4,5}，则 A∪B = ?</div>
+            <div class="options" id="optionsContainer">
+                <!-- Options will be generated dynamically -->
+            </div>
+            <div class="controls">
+                <button class="btn-prev" id="prevBtn" disabled>◀ 上一题</button>
+                <button class="btn-next" id="nextBtn">下一题 ▶</button>
+                <button class="btn-submit" id="submitBtn">提交答案</button>
+                <button class="btn-restart" id="restartBtn">↺ 重新开始</button>
+            </div>
+        </div>
+
+        <!-- Review Interface -->
+        <div class="review-area" id="reviewArea">
+            <h2 class="review-title">考试结果与解析</h2>
+            <div class="result-summary" id="resultSummary">正在计算...</div>
+            <div class="review-list" id="reviewList">
+                <!-- Review items will be inserted here by JavaScript -->
+            </div>
+            <div class="controls">
+                <button class="btn-restart" id="reviewRestartBtn">↺ 重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base questions (will be shuffled on each start)
+        const baseQuestions = [
+            {
+                text: "若 A={1,2,3}，B={3,4,5}，则 A∪B = ?",
+                options: ["{1,2,3}", "{3}", "{1,2,3,4,5}", "{1,2,4,5}"],
+                answer: "C",
+                discussion: "A∪B 表示 A 与 B 的并集，即所有属于 A 或 B 的元素。A={1,2,3}，B={3,4,5}，因此 A∪B={1,2,3,4,5}。"
+            },
+            {
+                text: "若 x 满足不等式 3x - 6 > 0，则 x 的取值范围是？",
+                options: ["x > 3", "x > 2", "x < 2", "x < -2"],
+                answer: "B",
+                discussion: "3x - 6 > 0 → 3x > 6 → x > 2。解不等式时注意不等号方向不变（除以正数）。"
+            },
+            {
+                text: "解不等式：x² - 9 < 0",
+                options: ["x > 3", "-3 < x < 3", "x < -3", "x > 0"],
+                answer: "B",
+                discussion: "x² - 9 < 0 → (x-3)(x+3) < 0 → 解为 -3 < x < 3。二次函数开口向上，小于0时取两根之间。"
+            },
+            {
+                text: "若 U 为全集，A′ 表示 A 的补集，则下列正确的是？",
+                options: ["A ∩ A′ = A", "A ∪ A′ = U", "A′ ⊂ A", "A′ = ∅"],
+                answer: "B",
+                discussion: "补集定义：A′ 包含全集 U 中不属于 A 的所有元素，因此 A 与 A′ 的并集等于全集 U。"
+            },
+            {
+                text: "若 x ≠ 2，解分式不等式：x / (x - 2) > 0",
+                options: ["x > 2", "x < 2", "x > 2 或 x < 0", "x > 0 且 x < 2"],
+                answer: "C",
+                discussion: "分式大于0，需分子分母同号：① x>0 且 x-2>0 → x>2；② x<0 且 x-2<0 → x<0。因此解为 x>2 或 x<0。"
+            },
+            {
+                text: "若集合 A={x|x≥0}，B={x|x>3}，则 A∩B = ?",
+                options: ["x≥3", "x>3", "x≥0", "x>0"],
+                answer: "B",
+                discussion: "A∩B 是同时满足 x≥0 和 x>3 的 x，即 x>3。"
+            },
+            {
+                text: "若 x 满足 |x - 3| < 2，则 x 的范围是？",
+                options: ["1 < x < 5", "x > 5", "x < 1", "x = 3"],
+                answer: "A",
+                discussion: "|x-3| < 2 等价于 -2 < x-3 < 2 → 1 < x < 5。绝对值不等式 |x-a| < k 的解为 a-k < x < a+k。"
+            },
+            {
+                text: "不等式 x² + 1 > 0 的解集是？",
+                options: ["无解", "x ≠ 0", "全体实数", "x > 1"],
+                answer: "C",
+                discussion: "x² ≥ 0，恒有 x²+1 ≥ 1 > 0，因此对任意实数 x 都成立，解集为全体实数。"
+            },
+            {
+                text: "不等式 2(x - 1) ≤ 3x + 4 的解为？",
+                options: ["x ≥ -6", "x ≤ -6", "x ≥ 6", "x ≤ 6"],
+                answer: "A",
+                discussion: "2x - 2 ≤ 3x + 4 → -2 - 4 ≤ 3x - 2x → -6 ≤ x，即 x ≥ -6。"
+            },
+            {
+                text: "集合 A={1,2,3,4} 中与 B={3,4,5} 的交集为？",
+                options: ["{1,2}", "{3,4}", "{1,2,3}", "{4,5}"],
+                answer: "B",
+                discussion: "交集 A∩B 是同时属于 A 和 B 的元素：3 和 4，所以 {3,4}。"
+            },
+            {
+                text: "若 x² ≥ 16，则 x 的解集是？",
+                options: ["x > 4", "x < -4 或 x > 4", "-4 < x < 4", "x = 4"],
+                answer: "B",
+                discussion: "x² ≥ 16 → |x| ≥ 4 → x ≤ -4 或 x ≥ 4。注意等号包含端点。"
+            },
+            {
+                text: "若 A={x|x<2}，B={x|x≥0}，则 A∩B 表示？",
+                options: ["x≥2", "0 ≤ x < 2", "x > 0", "x = 2"],
+                answer: "B",
+                discussion: "A∩B 需同时满足 x<2 和 x≥0，即 0 ≤ x < 2。"
+            },
+            {
+                text: "下列哪个是偶函数？",
+                options: ["y = x³", "y = x", "y = x²", "y = e^x"],
+                answer: "C",
+                discussion: "偶函数满足 f(-x) = f(x)。x² 是偶函数（(-x)² = x²）；x³ 是奇函数；x 是奇函数；e^x 既非奇也非偶。"
+            },
+            {
+                text: "函数 y = √(x - 1) 的定义域是？",
+                options: ["x > 1", "x ≥ 1", "x ≤ 1", "全体实数"],
+                answer: "B",
+                discussion: "根号内需非负：x - 1 ≥ 0 → x ≥ 1。"
+            },
+            {
+                text: "指数函数 y = 2^x 的特点是？",
+                options: ["恒为负", "单调递增", "单调递减", "有最小值"],
+                answer: "B",
+                discussion: "底数 2 > 1 的指数函数在整个定义域上严格单调递增，且值域为 (0, +∞)。"
+            },
+            {
+                text: "对数函数 y = log₂(x) 的定义域是？",
+                options: ["x ≥ 0", "x > 0", "x ≠ 0", "全体实数"],
+                answer: "B",
+                discussion: "对数函数定义域为正实数：x > 0。底数 2 > 0 且 ≠1，符合对数定义。"
+            },
+            {
+                text: "若等差数列首项 a₁=3，公差 d=2，则 a₅=?",
+                options: ["9", "10", "11", "12"],
+                answer: "C",
+                discussion: "等差数列通项公式：aₙ = a₁ + (n-1)d → a₅ = 3 + 4×2 = 11。"
+            },
+            {
+                text: "若等比数列首项 a₁=2，公比 q=3，则 a₄=?",
+                options: ["18", "27", "54", "162"],
+                answer: "C",
+                discussion: "等比数列通项公式：aₙ = a₁ × qⁿ⁻¹ → a₄ = 2 × 3³ = 2×27 = 54。"
+            },
+            {
+                text: "导数 dy/dx(3x²) = ?",
+                options: ["3x", "6x", "3x³", "9x"],
+                answer: "B",
+                discussion: "幂函数求导公式：d/dx(xⁿ) = n·xⁿ⁻¹ → d/dx(3x²) = 3×2x = 6x。"
+            },
+            {
+                text: "若 f(x)=sin x，则 f′(x)=？",
+                options: ["cos x", "-cos x", "-sin x", "tan x"],
+                answer: "A",
+                discussion: "基本导数公式：(sin x)′ = cos x。"
+            },
+            {
+                text: "若函数递增，表示？",
+                options: ["x 增大，y 变小", "x 增大，y 不变", "x 增大，y 增大", "无法判断"],
+                answer: "C",
+                discussion: "函数递增的定义：对定义域内任意 x₁ < x₂，有 f(x₁) < f(x₂)，即 x 增大时 y 增大。"
+            },
+            {
+                text: "若数列 1, 4, 7, 10,… 为？",
+                options: ["等差数列", "等比数列", "常数列", "递减数列"],
+                answer: "A",
+                discussion: "相邻两项差为 3（4-1=3, 7-4=3, ...），公差恒定，是等差数列。"
+            },
+            {
+                text: "若 lim x→0 sin x / x = ?",
+                options: ["0", "1", "∞", "-1"],
+                answer: "B",
+                discussion: "重要极限：lim(x→0) sin x / x = 1。可通过洛必达法则或单位圆几何证明。"
+            },
+            {
+                text: "函数 y = 1/x 的奇偶性是？",
+                options: ["偶函数", "奇函数", "常函数", "无法确定"],
+                answer: "B",
+                discussion: "f(-x) = 1/(-x) = -1/x = -f(x)，满足奇函数定义。"
+            },
+            {
+                text: "等比数列求和公式为？",
+                options: ["Sn = n(a₁ + an)", "Sn = a₁n", "Sn = a₁(1 - qⁿ)/(1 - q)", "Sn = n/2(a₁ + an)"],
+                answer: "C",
+                discussion: "等比数列前 n 项和公式（q ≠ 1）：Sₙ = a₁(1 - qⁿ)/(1 - q)。选项 D 是等差数列求和公式。"
+            },
+            {
+                text: "导数的几何意义是？",
+                options: ["面积", "斜率", "体积", "速度"],
+                answer: "B",
+                discussion: "函数在某点的导数值等于其图像在该点处切线的斜率。"
+            },
+            {
+                text: "直线斜率表示？",
+                options: ["曲率", "倾斜程度", "面积", "半径"],
+                answer: "B",
+                discussion: "斜率 k = tanθ（θ 为倾斜角），反映直线倾斜程度和方向。"
+            },
+            {
+                text: "直线 y = 2x + 3 的斜率是？",
+                options: ["1", "2", "3", "0"],
+                answer: "B",
+                discussion: "斜截式 y = kx + b 中，k 为斜率，此处 k = 2。"
+            },
+            {
+                text: "圆 (x-2)² + (y-1)² = 9 的半径为？",
+                options: ["2", "3", "1", "9"],
+                answer: "B",
+                discussion: "标准圆方程 (x-a)² + (y-b)² = r²，此处 r² = 9 → r = 3。"
+            },
+            {
+                text: "向量 (3,4) 的模长为？",
+                options: ["3", "4", "5", "7"],
+                answer: "C",
+                discussion: "向量模长公式：|v| = √(x² + y²) = √(3²+4²) = √25 = 5。"
+            },
+            {
+                text: "复数 (3+2i) + (1-5i) = ?",
+                options: ["4 - 3i", "4 + 7i", "2 - 7i", "4 - 7i"],
+                answer: "A",
+                discussion: "实部相加：3+1=4；虚部相加：2i + (-5i) = -3i → 结果为 4 - 3i。"
+            },
+            {
+                text: "复数 (2+i)(1-i) = ?",
+                options: ["3", "1+i", "3 - i", "3 + i"],
+                answer: "C",
+                discussion: "展开：(2)(1) + (2)(-i) + (i)(1) + (i)(-i) = 2 - 2i + i - i² = 2 - i - (-1) = 3 - i。"
+            },
+            {
+                text: "抛物线 y = x² 的顶点为？",
+                options: ["(0,0)", "(1,0)", "(0,1)", "(1,1)"],
+                answer: "A",
+                discussion: "标准抛物线 y = ax² + bx + c 的顶点横坐标为 -b/(2a)，此处 b=0, a=1 → x=0，代入得 y=0，顶点 (0,0)。"
+            },
+            {
+                text: "下面哪个图形体积公式是 V=πr²h？",
+                options: ["球", "圆柱", "圆锥", "立方体"],
+                answer: "B",
+                discussion: "圆柱体积 = 底面积 × 高 = πr² × h；圆锥为 (1/3)πr²h；球为 (4/3)πr³。"
+            },
+            {
+                text: "空间直角坐标的三个轴分别是？",
+                options: ["x、y", "y、z", "x、y、z", "x、y、t"],
+                answer: "C",
+                discussion: "三维空间直角坐标系由 x、y、z 三个互相垂直的轴构成。"
+            },
+            {
+                text: "直线 ax + by + c = 0 的斜率为？",
+                options: ["-a/b", "-b/a", "a/b", "b/a"],
+                answer: "B",
+                discussion: "变形为 y = (-a/b)x - c/b，斜率 k = -a/b（b ≠ 0）。"
+            },
+            {
+                text: "椭圆 x²/4 + y²/9 = 1 的长轴方向为？",
+                options: ["x 轴", "y 轴", "斜方向", "不确定"],
+                answer: "B",
+                discussion: "分母大的对应长轴：9 > 4，y² 项分母为9，故长轴在 y 轴方向，半长轴为3。"
+            },
+            {
+                text: "空间中两点距离公式是？",
+                options: ["|x₂-x₁|", "√[(x₂-x₁)²+(y₂-y₁)²]", "√[(x₂-x₁)²+(y₂-y₁)²+(z₂-z₁)²]", "无"],
+                answer: "C",
+                discussion: "三维空间两点 P₁(x₁,y₁,z₁)、P₂(x₂,y₂,z₂) 距离：√[(x₂-x₁)² + (y₂-y₁)² + (z₂-z₁)²]。"
+            },
+            {
+                text: "双曲线 x² - y² = 1 的开口方向是？",
+                options: ["左右", "上下", "四面八方", "不确定"],
+                answer: "A",
+                discussion: "标准形式 x²/a² - y²/b² = 1 表示横轴双曲线，开口向左右。"
+            },
+            {
+                text: "若向量 a·b = 0，则它们？",
+                options: ["同向", "反向", "垂直", "重合"],
+                answer: "C",
+                discussion: "点积 a·b = |a||b|cosθ = 0 → cosθ = 0 → θ = 90°，即两向量垂直。"
+            },
+            {
+                text: "投掷一次公平骰子，掷出奇数的概率是？",
+                options: ["1/2", "1/3", "1/6", "2/3"],
+                answer: "A",
+                discussion: "骰子点数 1-6，奇数有 1,3,5 共3个 → 概率 = 3/6 = 1/2。"
+            },
+            {
+                text: "从 1–10 随机选一个数，选到偶数的概率？",
+                options: ["1/2", "1/3", "2/3", "1/5"],
+                answer: "A",
+                discussion: "1–10 中偶数有 2,4,6,8,10 共5个 → 概率 = 5/10 = 1/2。"
+            },
+            {
+                text: "正态分布曲线形状为？",
+                options: ["U 形", "钟形", "三角形", "方形"],
+                answer: "B",
+                discussion: "正态分布（高斯分布）的概率密度函数呈钟形（单峰、对称、两头低中间高）。"
+            },
+            {
+                text: "数据 2,4,6,8 的平均数是？",
+                options: ["4", "5", "6", "7"],
+                answer: "B",
+                discussion: "平均数 = (2+4+6+8)/4 = 20/4 = 5。"
+            },
+            {
+                text: "随机事件必然发生，其概率为？",
+                options: ["0", "1", "1/2", "不确定"],
+                answer: "B",
+                discussion: "必然事件在每次试验中一定发生，概率为1。"
+            },
+            {
+                text: "数据偏差的大小通常用什么衡量？",
+                options: ["均值", "方差", "中位数", "众数"],
+                answer: "B",
+                discussion: "方差（或标准差）反映数据偏离平均值的程度，是衡量离散程度的核心指标。"
+            },
+            {
+                text: "给定事件 A 的概率为 0.3，则其补集概率为？",
+                options: ["0.3", "0.5", "0.7", "1"],
+                answer: "C",
+                discussion: "P(A') = 1 - P(A) = 1 - 0.3 = 0.7。"
+            },
+            {
+                text: "样本容量越大，统计结果越？",
+                options: ["不稳定", "更可靠", "更随机", "无意义"],
+                answer: "B",
+                discussion: "根据大数定律，样本量增大时，样本统计量趋近于总体参数，结果更可靠、稳定。"
+            }
+        ];
+
+        // Fisher-Yates shuffle
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Shuffle options for a question
+        function shuffleOptions(options, correctIndex) {
+            const indices = [0, 1, 2, 3];
+            const shuffledIndices = shuffleArray(indices);
+            const newOptions = [];
+            let newCorrectIndex = -1;
+            
+            for (let i = 0; i < 4; i++) {
+                const oldIdx = shuffledIndices[i];
+                newOptions.push(options[oldIdx]);
+                if (oldIdx === correctIndex) {
+                    newCorrectIndex = i;
+                }
+            }
+            
+            return {
+                options: newOptions,
+                correctLetter: String.fromCharCode(65 + newCorrectIndex)
+            };
+        }
+
+        // State
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let shuffledQuestions = [];
+        let timer;
+        let timeLeft = 60 * 60; // 60 minutes in seconds
+        let originalAnswerMap = {}; // Maps shuffled index → original answer letter
+
+        // DOM elements
+        const examArea = document.getElementById('examArea');
+        const reviewArea = document.getElementById('reviewArea');
+        const questionNumber = document.getElementById('questionNumber');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const reviewRestartBtn = document.getElementById('reviewRestartBtn');
+        const timerDisplay = document.getElementById('timer');
+        const resultSummary = document.getElementById('resultSummary');
+        const reviewList = document.getElementById('reviewList');
+
+        // Initialize exam
+        function initExam() {
+            // Clear previous state
+            clearInterval(timer);
+            timeLeft = 60 * 60;
+            timerDisplay.textContent = `剩余时间: ${Math.floor(timeLeft/60).toString().padStart(2, '0')}:${(timeLeft%60).toString().padStart(2, '0')}`;
+            
+            // Shuffle questions
+            const tempShuffled = shuffleArray(baseQuestions);
+            
+            // Shuffle each question's options and map correct answers
+            shuffledQuestions = tempShuffled.map((q, idx) => {
+                const correctIndex = q.options.indexOf(q.options.find((opt, i) => 
+                    q.answer === 'A' && i === 0 ||
+                    q.answer === 'B' && i === 1 ||
+                    q.answer === 'C' && i === 2 ||
+                    q.answer === 'D' && i === 3
+                ));
+                
+                const shuffled = shuffleOptions(q.options, correctIndex);
+                
+                // Store mapping: shuffled index → original answer
+                originalAnswerMap[idx] = q.answer;
+                
+                return {
+                    text: q.text,
+                    options: shuffled.options,
+                    answer: shuffled.correctLetter, // new letter after shuffle
+                    originalAnswer: q.answer,
+                    discussion: q.discussion
+                };
+            });
+            
+            userAnswers = new Array(shuffledQuestions.length).fill(null);
+            currentQuestion = 0;
+            
+            loadQuestion(currentQuestion);
+            startTimer();
+            
+            // Show exam, hide review
+            examArea.style.display = 'block';
+            reviewArea.style.display = 'none';
+        }
+
+        // Load question
+        function loadQuestion(index) {
+            const q = shuffledQuestions[index];
+            questionNumber.textContent = `问题 ${index + 1} / ${shuffledQuestions.length}`;
+            questionText.textContent = q.text;
+            
+            // Generate options dynamically
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const letter = String.fromCharCode(65 + i);
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = `${letter}. ${opt}`;
+                optionDiv.dataset.value = letter;
+                if (userAnswers[index] === letter) {
+                    optionDiv.classList.add('selected');
+                }
+                optionDiv.addEventListener('click', () => selectOption(optionDiv, index, letter));
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // Update button states
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === shuffledQuestions.length - 1;
+        }
+
+        // Option selection
+        function selectOption(element, qIndex, value) {
+            // Remove selected class from all siblings
+            const siblings = element.parentElement.querySelectorAll('.option');
+            siblings.forEach(sib => sib.classList.remove('selected'));
+            // Add to clicked
+            element.classList.add('selected');
+            // Save answer
+            userAnswers[qIndex] = value;
+        }
+
+        // Navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion(currentQuestion);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestion < shuffledQuestions.length - 1) {
+                currentQuestion++;
+                loadQuestion(currentQuestion);
+            }
+        });
+
+        restartBtn.addEventListener('click', initExam);
+        reviewRestartBtn.addEventListener('click', initExam);
+
+        // Timer
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                timerDisplay.textContent = `剩余时间: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitExam();
+                }
+            }, 1000);
+        }
+
+        // Submit exam
+        submitBtn.addEventListener('click', submitExam);
+
+        function submitExam() {
+            clearInterval(timer);
+            
+            // Calculate score
+            let correct = 0;
+            for (let i = 0; i < shuffledQuestions.length; i++) {
+                if (userAnswers[i] === shuffledQuestions[i].answer) {
+                    correct++;
+                }
+            }
+            const score = Math.round((correct / shuffledQuestions.length) * 100);
+            
+            // Show result summary
+            resultSummary.innerHTML = `
+                <strong>考试完成！</strong><br>
+                正确: ${correct} / ${shuffledQuestions.length}<br>
+                得分: ${score}%<br>
+                ${score >= 70 ? '✅ 恭喜！通过考试' : '❌ 未通过，继续努力'}
+            `;
+            
+            // Generate review (show original correct answers & discussion)
+            reviewList.innerHTML = '';
+            shuffledQuestions.forEach((q, i) => {
+                const isCorrect = userAnswers[i] === q.answer;
+                const userAnswer = userAnswers[i] || '未作答';
+                const correctAnswer = q.originalAnswer; // Show original letter (A/B/C/D), not shuffled
+                
+                const item = document.createElement('div');
+                item.className = `review-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                item.innerHTML = `
+                    <div class="review-header">问题 ${i + 1}</div>
+                    <div class="question-text">${q.text}</div>
+                    <div class="review-answer">
+                        <strong>你的答案:</strong> ${userAnswer}<br>
+                        <strong>正确答案:</strong> ${correctAnswer}
+                    </div>
+                    <div class="discussion">
+                        <div class="discussion-title">解析 (Bahasa Indonesia):</div>
+                        ${q.discussion}
+                    </div>
+                `;
+                reviewList.appendChild(item);
+            });
+            
+            // Switch to review view
+            examArea.style.display = 'none';
+            reviewArea.style.display = 'block';
+        }
+
+        // Start the exam on load
+        window.onload = initExam;
+    </script>
+</body>
+</html>
+
